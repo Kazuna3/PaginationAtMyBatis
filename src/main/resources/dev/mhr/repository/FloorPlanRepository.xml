@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper
+    namespace="dev.mhr.repository.FloorPlanRepository">
+
+	<!-- Section8：<resultMap> 複数のテーブルを結合する！複雑だけど、ゆっくり学習しよう！ -->
+
+	<!-- Section8_23：collection（１対多） -->
+	<resultMap id="floorPlanResult" type="FloorPlan">
+		<!-- 主キー -->
+		<id property="id" column="id" />
+
+		<!-- 主キー以外 -->
+		<result property="floorPlanName" column="floor_plan_name" />
+
+		<collection property="mansions" ofType="Mansion">
+			<id property="id" column="id" />
+			<result property="name" column="name" />
+			<result property="address" column="address" />
+			<result property="station" column="station" />
+			<result property="floorPlanId" column="floor_plan_id" />
+			<result property="buildingDate" column="building_date" />
+			<result property="status" column="status" />
+		</collection>
+	</resultMap>
+
+	<!-- Section8_23：collection（１対多） -->
+	<select id="selectByFloorPlanIdWithMansion" resultMap="floorPlanResult" >
+SELECT
+		m.id
+	,	m.name
+	,	m.address
+	,	m.station
+	,	m.floor_plan_id
+	,	m.building_date
+	,	m.status
+	,	f.id
+	,	f.floor_plan_name
+FROM
+	mansion m INNER JOIN floor_plan f ON m.floor_plan_id = f.id
+WHERE
+	m.floor_plan_id = #{id}
+	</select>
+
+	<!-- Section4_17：New！練習問題：FloorPlanテーブルから全件取得 -->
+	<select id="selectAll" resultType="FloorPlan">
+SELECT
+      id
+    , floor_plan_name AS floorPlanName
+FROM
+    floor_plan
+	</select>
+
+	<!-- Section5_21：New！練習問題：FloorPlanテーブルから１件取得 -->
+	<!-- <select id="selectById" resultType="FloorPlan" parameterType="int"> -->
+	<!-- int を Integer としても、ちゃんと動く。 -->
+	<select id="selectById" resultType="FloorPlan" parameterType="Integer">
+SELECT
+      id
+    , floor_plan_name AS floorPlanName
+FROM
+    floor_plan
+WHERE
+	id = #{id}
+	</select>
+
+	<!-- Section6_26：New！練習問題：<foreach> -->
+	<!--
+		次の①②③は何れも動く。よって一番シンプルな③が無難で良い。④はエラーになる。
+		①②が共に動く理由は良く分かっていない。
+	-->
+	<!-- ① <select id="selectByIdIN" resultType="FloorPlan" parameterType="List"> -->
+	<!-- ② <select id="selectByIdIN" resultType="FloorPlan" parameterType="int"> -->
+	<!-- ③ <select id="selectByIdIN" resultType="FloorPlan"> -->
+	<!-- ④ <select id="selectByIdIN" resultType="FloorPlan" parameterType="hoge"> -->
+	<select id="selectByIdIN" resultType="FloorPlan">
+SELECT
+      id
+    , floor_plan_name AS floorPlanName
+FROM
+    floor_plan
+WHERE
+	id IN
+	<foreach item="idList" collection="list" open="(" separator="," close=")">
+		#{idList}
+	</foreach>
+	</select>
+
+	<!-- Section6_28：New！練習問題：<bind> -->
+	<select id="selectByFloorPlanNameLike" resultType="FloorPlan">
+		<bind name="bindName1" value="'%' + _parameter + '%'" />
+SELECT
+      id
+    , floor_plan_name AS floorPlanName
+FROM
+    floor_plan
+WHERE
+	floor_plan_name LIKE #{bindName1}
+	</select>
+
+	<!-- Section6_29()：TRIM（動的 SQL）の試行錯誤 -->
+	<select id="selectByTrim" resultType="FloorPlan">
+SELECT
+      id
+    , floor_plan_name AS floorPlanName
+FROM
+    floor_plan
+    <trim prefix="WHERE" prefixOverrides="AND|OR">
+		<if test="id!=null">
+			id=#{id}
+		</if>	
+		<!--  <if test="floor_plan_name!=null"> -->
+		<if test="floorPlanName!=null">
+			<!--  OR floor_plan_name=#{floorPlanName} -->
+			OR floor_plan_name=#{floorPlanName}
+			<!--  OR floor_plan_name=#{floor_plan_name} -->
+			<!--  OR floorPlanName=#{floorPlanName} -->
+		</if>
+	</trim>
+	</select>
+
+	<!-- Section7_31()：New！練習問題：INSERT -->
+	<insert id="insert_01" parameterType="FloorPlan">
+INSERT INTO floor_plan( 
+	floor_plan_name
+) 
+VALUES ( 
+	#{floorPlanName}
+)
+	</insert>
+
+	<!-- Section7_33()：New！練習問題：UPDATE -->
+	<update id="update_01" parameterType="FloorPlan">
+UPDATE floor_plan 
+<set>
+	<if test="floorPlanName != null">
+		floor_plan_name = #{floorPlanName}
+	</if>
+</set>
+WHERE
+    id = #{id}
+	</update>
+
+	<!-- Section7_XX()：New！自主練習問題：UPDATE -->
+	<update id="update_02" parameterType="FloorPlan">
+UPDATE
+	floor_plan 
+SET
+	floor_plan_name = #{floorPlanName}
+WHERE
+    id = #{id}
+	</update>
+
+</mapper>

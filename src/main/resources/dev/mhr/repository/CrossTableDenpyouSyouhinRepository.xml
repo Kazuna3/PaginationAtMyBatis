@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper
+    namespace="dev.mhr.repository.CrossTableDenpyouSyouhinRepository">
+
+	<resultMap id="hoge" type="CrossTableDenpyouSyouhin">
+		<!-- 主キー -->
+		<!--
+		テーブル［cross_table_denpyou_syouhin］の CREATE TABLE 文にて、
+		［PRIMARY KEY (denpyou_id, syouhin_id)］で、複合キーを設定した場合は、
+		id tag を二つ使って次のように定義する。
+		因みに、テーブル［cross_table_denpyou_syouhin］の CREATE TABLE 文にて、
+		［PRIMARY KEY］を設定せずに、"denpyouId" を id tag で定義した場合、
+		その id tag で指定したレコードが複数あっても、一つしか出力されないようになるので、
+		注意すること。
+		-->
+		<id property="denpyouId" column="denpyouId" />
+		<id property="syouhinId" column="syouhinId" />
+
+		<!-- 主キー以外 -->
+		<!--
+		テーブル［cross_table_denpyou_syouhin］の CREATE TABLE 文にて、
+		PRIMARY KEY を設定しない場合は、
+		result tag を二つ使って次のように定義する。
+		但し、主キーを持たないテーブルなので、整合性を崩さないように、
+		レコードの追加、更新、削除を、アプリ側で完璧に制御する必要が生じるので、
+		避けるべきである。
+		-->
+		<!--
+		<result property="denpyouId" column="denpyouId" />
+		<result property="syouhinId" column="syouhinId" />
+		-->
+
+		<result property="urine" column="urine" />
+
+		<association property="denpyou" javaType="Denpyou">
+			<id property="denpyouId" column="denpyouId" />
+			<result property="hakkouDate" column="hakkouDate" />
+			<result property="empId" column="empId" />
+		</association>
+
+		<association property="syouhin" javaType="Syouhin">
+			<id property="syouhinId" column="syouhinId" />
+			<result property="syouhinName" column="syouhinName" />
+			<result property="syouhinGenka" column="syouhinGenka" />
+		</association>
+
+		<association property="employee" javaType="Employee">
+			<id property="empId" column="empId" />
+			<result property="empName" column="empName" />
+			<result property="empNameKana" column="empNameKana" />
+			<result property="empAge" column="empAge" />
+			<result property="empHiredate" column="empHiredate" />
+		</association>
+
+	</resultMap>
+
+	<select id="selectByDenpyouId" resultMap="hoge" >
+SELECT
+		emp.emp_id			AS empId
+	,	emp.emp_name		AS empName
+	,	emp.emp_name_kana	AS empNameKana
+	,	emp.emp_age			AS empAge
+	,	emp.emp_hiredate	AS empHiredate
+	,	den.denpyou_id		AS denpyouId
+	,	den.hakkou_date		AS hakkouDate
+<!-- 	,	den.emp_id			AS den_emp_id -->
+<!-- 	,	ct.denpyou_id		AS ct_denpyou_id -->
+	,	ct.syouhin_id		AS syouhinId
+	,	ct.urine
+<!-- 	,	hin.syouhin_id		AS hin_syouhin_id -->
+	,	hin.syouhin_name	AS syouhinName
+	,	hin.syouhin_genka	AS syouhinGenka
+FROM
+				employee					emp
+	INNER JOIN	denpyou 					den	ON emp.emp_id		= den.emp_id
+	INNER JOIN	cross_table_denpyou_syouhin	ct	ON den.denpyou_id	= ct.denpyou_id
+	INNER JOIN	syouhin						hin	ON ct.syouhin_id	= hin.syouhin_id
+WHERE
+	den.denpyou_id = #{id}
+	</select>
+
+</mapper>
